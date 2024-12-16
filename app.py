@@ -1,13 +1,15 @@
 from flask import Flask, request
 from flask_mysqldb import MySQL
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room
+from flask_socketio import SocketIO, emit
+import os
 
+# Initialize the Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# WebSocket setup
-socketio = SocketIO(app, cors_allowed_origins="*")
+# WebSocket setup using gevent
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 
 # Database configuration
 app.config["MYSQL_HOST"] = "sql7.freesqldatabase.com"
@@ -28,7 +30,7 @@ def handle_sell(data):
     password = data["password"]
     product_code = data["productCode"]
     product_price = data["productPrice"]
-    
+
     try:
         cursor = mysql.connection.cursor()
 
@@ -80,7 +82,6 @@ def handle_sell(data):
     except Exception as e:
         emit("sell_response", {"error": str(e)})
 
-
 @socketio.on("update_price")
 def handle_update_price(data):
     """
@@ -89,7 +90,7 @@ def handle_update_price(data):
     vending_machine_code = data["vendingMachineCode"]
     product_code = data["productCode"]
     new_price = data["newPrice"]
-    
+
     try:
         cursor = mysql.connection.cursor()
 
@@ -116,6 +117,7 @@ def handle_update_price(data):
     except Exception as e:
         emit("update_response", {"error": str(e)})
 
-
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    # Use the PORT environment variable provided by Glitch or default to 5000
+    port = int(os.getenv("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port)
