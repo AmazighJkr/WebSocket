@@ -1,6 +1,7 @@
 Flask
 Flask-SocketIO
-eventlet
+gevent
+gevent-websocket
 Flask-Cors
 Flask-MySQLdb
 gunicorn
